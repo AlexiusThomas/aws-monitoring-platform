@@ -21,5 +21,3 @@ provider "aws" {
     }
   }
 }
-
-# Add project-specific modules and resources below.

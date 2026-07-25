@@ -5,12 +5,24 @@ variable "aws_region" {
 }
 
 variable "project_name" {
-  description = "Project name used for naming and tagging."
+  description = "Project name used for resource naming and tagging."
   type        = string
+  default     = "aws-monitoring-platform"
 }
 
 variable "environment" {
   description = "Deployment environment."
   type        = string
   default     = "dev"
+}
+
+variable "instance_type" {
+  description = "EC2 instance type used for the monitored server."
+  type        = string
+  default     = "t3.micro"
+}
+
+variable "alert_email" {
+  description = "Email address that receives CloudWatch alarm notifications."
+  type        = string
 }
