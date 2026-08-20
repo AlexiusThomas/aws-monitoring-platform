@@ -1,4 +1,4 @@
-# Project Name
+# AWS Cloud Monitoring & Observability Platform
 
 [![Terraform](https://img.shields.io/badge/IaC-Terraform-7B42BC?logo=terraform)](https://developer.hashicorp.com/terraform)
 [![AWS](https://img.shields.io/badge/Cloud-AWS-232F3E?logo=amazonaws)](https://aws.amazon.com/)
@@ -7,56 +7,107 @@
 
 ## Overview
 
-Briefly explain the business or technical problem this project solves.
+This project demonstrates how AWS infrastructure can be provisioned, monitored, and operated using Infrastructure as Code and automated observability.
 
-This project demonstrates:
+### Problem
 
-- Secure AWS infrastructure design
-- Infrastructure as Code using Terraform
-- Automated validation through GitHub Actions
-- Clear technical documentation
-- Repeatable deployment and cleanup procedures
+Cloud infrastructure requires proactive monitoring so operational issues can be detected before they significantly affect availability. Manually deploying infrastructure and checking resources individually also creates operational overhead and increases the possibility of configuration errors.
+
+### Solution
+
+I built a reusable AWS monitoring platform using **Terraform, Amazon CloudWatch, Amazon SNS, AWS IAM, and GitHub Actions**.
+
+Terraform provides repeatable infrastructure deployment, while CloudWatch dashboards and alarms provide visibility into infrastructure health. Amazon SNS provides automated operational notifications when monitored conditions cross configured thresholds. GitHub Actions provides automated validation of Terraform changes.
+
+The project demonstrates:
+
+- Infrastructure as Code with Terraform
+- AWS monitoring and observability
+- Automated alerting
+- Infrastructure health visibility
+- CI/CD-based Terraform validation
+- IAM-based access control
+- Repeatable deployment and cleanup
+- Operational troubleshooting practices
 
 ## Architecture
 
-Add the architecture diagram here:
-
 ```text
-User
-  |
-Route 53
-  |
-Application Load Balancer
-  |
-Private Application Tier
-  |
-Managed Data Tier
+                    GitHub
+                       |
+                GitHub Actions
+                       |
+                Terraform Validate
+                       |
+                       v
+                  AWS Account
+                       |
+              Terraform Deployment
+                       |
+          +------------+------------+
+          |                         |
+          v                         v
+    AWS Infrastructure        Amazon CloudWatch
+                                    |
+                             Metrics / Dashboard
+                                    |
+                             CloudWatch Alarm
+                                    |
+                                    v
+                                Amazon SNS
+                                    |
+                                    v
+                           Operational Alert
 ```
+
+
 
 ![Architecture Diagram](architecture/architecture-diagram.png)
 
 ## Key Features
 
-- Feature one
-- Feature two
-- Feature three
-- Feature four
+### Infrastructure as Code
+
+AWS resources are defined through Terraform, allowing the environment to be deployed consistently rather than configured manually.
+
+### Automated Infrastructure Validation
+
+GitHub Actions validates Terraform changes before deployment using formatting and configuration checks.
+
+Typical validation includes:
+
+```bash
+terraform fmt -check -recursive
+terraform validate
+```
+
+### Centralized Monitoring
+
+Amazon CloudWatch provides centralized visibility into infrastructure metrics and system health.
+
+### Proactive Alerting
+
+CloudWatch alarms monitor configured thresholds. When an alarm enters an alert state, Amazon SNS can notify the operator so the issue can be investigated.
+
+### Repeatable Deployment
+
+The environment can be created, modified, and removed through Terraform, reducing manual configuration and improving consistency.
 
 ## AWS Services
 
 | Service | Purpose |
-|---|---|
-| Amazon VPC | Network isolation and routing |
-| AWS IAM | Access control and permissions |
-| Amazon CloudWatch | Monitoring and logging |
-| AWS service | Add project-specific purpose |
+|--------|---------|
+| Amazon VPC | Provides network isolation and routing for deployed resources |
+| AWS IAM | Controls permissions used by infrastructure and monitoring components |
+| Amazon CloudWatch | Provides metrics, dashboards, monitoring, and alarms |
+| Amazon SNS | Delivers notifications when monitored conditions trigger alarms |
 
 ## Technology Stack
 
-- AWS
+- Amazon Web Services
 - Terraform
 - GitHub Actions
-- Python or Bash
+- Git
 - Linux
 
 ## Repository Structure
@@ -69,8 +120,6 @@ Managed Data Tier
 ├── docs/
 ├── images/
 ├── scripts/
-├── src/
-├── tests/
 ├── terraform/
 │   ├── environments/
 │   │   └── dev/
@@ -84,40 +133,20 @@ Managed Data Tier
 └── SECURITY.md
 ```
 
-## Prerequisites
-
-Before deploying, install and configure:
-
-- An AWS account
-- AWS CLI
-- Terraform
-- Git
-- Appropriate AWS credentials
-
-Verify access:
-
-```bash
-aws sts get-caller-identity
-terraform version
-```
-
 ## Deployment
 
 ### 1. Clone the repository
 
 ```bash
-git clone https://github.com/OWNER/REPOSITORY.git
-cd REPOSITORY
+git clone https://github.com/AlexiusThomas/aws-monitoring-platform.git
+cd aws-monitoring-platform
 ```
 
-### 2. Configure variables
+### 2. Configure AWS credentials
 
 ```bash
-cd terraform/environments/dev
-cp terraform.tfvars.example terraform.tfvars
+aws sts get-caller-identity
 ```
-
-Update `terraform.tfvars` with your own values.
 
 ### 3. Initialize Terraform
 
@@ -125,14 +154,14 @@ Update `terraform.tfvars` with your own values.
 terraform init
 ```
 
-### 4. Validate the configuration
+### 4. Validate
 
 ```bash
 terraform fmt -check -recursive
 terraform validate
 ```
 
-### 5. Review the deployment plan
+### 5. Review Changes
 
 ```bash
 terraform plan
@@ -144,64 +173,83 @@ terraform plan
 terraform apply
 ```
 
-## Validation
+## Operational Validation
 
-Describe how you confirmed the deployment worked.
+- Terraform completed successfully
+- AWS resources created as expected
+- CloudWatch metrics are visible
+- Dashboard displays system health
+- Alarms are active and correctly configured
+- SNS notifications are working
+- GitHub Actions validation passes
 
-Examples:
+Useful commands:
 
 ```bash
 terraform output
-aws ec2 describe-vpcs
+terraform state list
+aws cloudwatch describe-alarms
+aws sns list-topics
 ```
 
-Include screenshots in the `images/` folder.
+## Failure Scenario and Operational Response
 
-## Cleanup
+### Example: Resource Utilization Exceeds Threshold
 
-Destroy resources when finished to prevent unnecessary AWS charges:
+**1. Detect** – CloudWatch monitors metrics  
+**2. Alert** – Alarm triggers SNS notification  
+**3. Investigate** – Review metrics and logs  
+**4. Remediate** – Fix configuration or scale resources  
+**5. Verify** – Confirm system returns to normal  
+
+This demonstrates the SRE workflow:
+
+**Detect → Investigate → Remediate → Verify**
+
+## Security Considerations
+
+- Use least privilege IAM policies
+- Never commit AWS credentials
+- Review Terraform plans before apply
+- Restrict network access where possible
+- Enable monitoring for all critical resources
+
+## Cost Considerations
+
+- Use only required resources
+- Prefer small development instances
+- Destroy infrastructure after testing
+- Monitor AWS billing dashboard
 
 ```bash
 terraform destroy
 ```
 
-## Security Considerations
-
-- Follow least-privilege IAM principles
-- Do not commit credentials or secret values
-- Encrypt data at rest and in transit
-- Restrict inbound traffic
-- Enable logging and monitoring
-- Review Terraform plans before applying changes
-
-## Cost Considerations
-
-List services that may generate charges and describe any cost controls used.
-
-Examples:
-
-- Resource tagging
-- Small development instance sizes
-- Budget alerts
-- Automatic cleanup
-- Serverless or managed services when appropriate
-
 ## Lessons Learned
 
-Explain what you learned while building the project.
+- Infrastructure as Code improves consistency
+- Monitoring must be tied to actionable alerts
+- Automation reduces operational overhead
+- IAM design is critical from the start
+- Deployment is not complete without observability
 
-- Technical lesson
-- Design tradeoff
-- Troubleshooting lesson
-- Security improvement
+## Reliability & Scaling
 
-## Future Improvements
+Future improvements:
 
-- Add another environment
-- Add automated tests
-- Strengthen monitoring
-- Add policy-as-code checks
-- Improve disaster recovery
+- Multi-AZ architecture
+- Auto Scaling groups
+- Centralized logging (CloudWatch Logs / OpenSearch)
+- Automated remediation
+- Separate environments (dev/staging/prod)
+- Terraform remote state + locking
+- Policy-as-code validation
+
+## What This Project Demonstrates
+
+**Build → Automate → Monitor → Detect → Investigate → Remediate → Verify**
+
+This project demonstrates an operational engineering mindset focused on reliability and observability.
 
 ## Documentation
 
@@ -213,10 +261,10 @@ Explain what you learned while building the project.
 
 **Alexius Thomas**
 
-- GitHub: [AlexiusThomas](https://github.com/AlexiusThomas)
-- LinkedIn: [Alexius Victoria](https://www.linkedin.com/in/alexiusvictoria)
-- Email: [alexiusvthomas@gmail.com](mailto:alexiusvthomas@gmail.com)
+- GitHub: AlexiusThomas
+- LinkedIn: Alexius Victoria
 
 ## License
 
-This project is licensed under the [MIT License](LICENSE).
+This project is licensed under the MIT License.
+
